@@ -6,6 +6,13 @@
 
 运行项目测试：python -m unittest discover -s tests -v。
 检查源码：python -m compileall -q exchange。
-运行本地演练：python -m exchange --database demo.db。
+运行本地演练：python -m exchange --database demo.db（演练库可删除后重建）。
 
-exchange/catalog.py 登记来源字段和原件，grants.py 与 policy.py 管理使用边界，products.py 编排资料，delivery.py 出具回执，audit.py 记录操作。现有接口只覆盖单次登记、编排和交付，目录职责及当前边界可从源码与测试读取。
+exchange/catalog.py 登记来源字段和原件，并受理删除请求（撤回原件）；grants.py 与 policy.py 管理使用边界，授权可收窄、可撤销并保留全部版本；redactions.py 登记反馈原件的脱敏版本及身份遮蔽方式；reviews.py 登记复核轮次并回答“哪些反馈可用于哪一轮复核”；citations.py 登记评级引用，把结论与证据版本、授权版本、规则版本绑定；products.py 编排资料，delivery.py 出具回执，audit.py 记录操作。
+
+## 授权、脱敏材料与评级引用的关联
+
+- 授权带有材料形态条款：raw 允许引用原文，redacted 仅允许引用脱敏材料。收窄（raw → redacted）与撤销都生成新的授权版本，旧版本保留，用于解释历史结论当时的依据。
+- 脱敏材料按原件逐版本登记，引用脱敏材料时必须指向属于该原件的具体版本。
+- 评级引用在登记时核对当前授权形态与规则决策，并快照授权版本号与规则版本号；登记后不可更改。授权收窄后，未来摘要不能再引用原文；授权撤销或原件撤回后，该反馈不再进入新的引用与交付。citations.explain 可随时还原历史结论使用的证据版本与处理依据。
+- 同一反馈被两个平台转送时，按来源分别登记原件、分别核发授权；可用性判断与引用都绑定具体原件与授权编号，不因文本相似而合并。

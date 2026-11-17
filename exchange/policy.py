@@ -19,6 +19,11 @@ class Policies:
                 "ON CONFLICT(jurisdiction,classification,purpose) DO UPDATE SET decision=excluded.decision,revision=excluded.revision",
                 (jurisdiction, classification, purpose, decision, revision),
             )
+            self.connection.execute(
+                "INSERT INTO policy_revisions(jurisdiction,classification,purpose,revision,decision,changed_at,actor) "
+                "VALUES(?,?,?,?,?,?,?)",
+                (jurisdiction, classification, purpose, revision, decision, at, actor),
+            )
             write(self.connection, at, actor, "policy.set", jurisdiction, {"purpose": purpose, "revision": revision})
         return revision
 
@@ -28,3 +33,11 @@ class Policies:
             (jurisdiction, classification, purpose),
         ).fetchone()
         return (row["decision"], row["revision"]) if row else ("deny", 0)
+
+    def revision_decision(self, jurisdiction, classification, purpose, revision):
+        row = self.connection.execute(
+            "SELECT decision FROM policy_revisions "
+            "WHERE jurisdiction=? AND classification=? AND purpose=? AND revision=?",
+            (jurisdiction, classification, purpose, revision),
+        ).fetchone()
+        return row["decision"] if row else None

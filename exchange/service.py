@@ -1,10 +1,13 @@
 from .audit import history
 from .catalog import Catalog
+from .citations import Citations
 from .db import connect
 from .delivery import Delivery
 from .grants import Grants
 from .policy import Policies
 from .products import Products
+from .redactions import Redactions
+from .reviews import Reviews
 
 
 class Exchange:
@@ -15,6 +18,9 @@ class Exchange:
         self.policies = Policies(self.connection)
         self.products = Products(self.connection)
         self.delivery = Delivery(self.connection)
+        self.redactions = Redactions(self.connection)
+        self.reviews = Reviews(self.connection)
+        self.citations = Citations(self.connection)
 
     def history(self, subject):
         return history(self.connection, subject)

@@ -21,12 +21,45 @@ CREATE TABLE IF NOT EXISTS assets (
 CREATE TABLE IF NOT EXISTS grants (
     id TEXT PRIMARY KEY, source_id TEXT NOT NULL REFERENCES sources(id),
     recipient TEXT NOT NULL, purpose TEXT NOT NULL, valid_until TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'active'
+    status TEXT NOT NULL DEFAULT 'active',
+    terms TEXT NOT NULL DEFAULT 'raw'
+);
+CREATE TABLE IF NOT EXISTS grant_revisions (
+    grant_id TEXT NOT NULL REFERENCES grants(id), revision INTEGER NOT NULL,
+    status TEXT NOT NULL, terms TEXT NOT NULL, valid_until TEXT NOT NULL,
+    changed_at TEXT NOT NULL, actor TEXT NOT NULL, reason TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY(grant_id,revision)
 );
 CREATE TABLE IF NOT EXISTS policies (
     jurisdiction TEXT NOT NULL, classification TEXT NOT NULL, purpose TEXT NOT NULL,
     decision TEXT NOT NULL, revision INTEGER NOT NULL,
     PRIMARY KEY(jurisdiction,classification,purpose)
+);
+CREATE TABLE IF NOT EXISTS policy_revisions (
+    jurisdiction TEXT NOT NULL, classification TEXT NOT NULL, purpose TEXT NOT NULL,
+    revision INTEGER NOT NULL, decision TEXT NOT NULL,
+    changed_at TEXT NOT NULL, actor TEXT NOT NULL,
+    PRIMARY KEY(jurisdiction,classification,purpose,revision)
+);
+CREATE TABLE IF NOT EXISTS redactions (
+    id TEXT PRIMARY KEY, asset_id TEXT NOT NULL REFERENCES assets(id),
+    version INTEGER NOT NULL, method TEXT NOT NULL,
+    masked_payload TEXT NOT NULL, digest TEXT NOT NULL,
+    created_at TEXT NOT NULL, created_by TEXT NOT NULL,
+    UNIQUE(asset_id,version)
+);
+CREATE TABLE IF NOT EXISTS rounds (
+    id TEXT PRIMARY KEY, recipient TEXT NOT NULL, purpose TEXT NOT NULL,
+    opens_at TEXT NOT NULL, closes_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS citations (
+    id TEXT PRIMARY KEY, round_id TEXT NOT NULL REFERENCES rounds(id),
+    asset_id TEXT NOT NULL REFERENCES assets(id),
+    redaction_id TEXT REFERENCES redactions(id),
+    grant_id TEXT NOT NULL REFERENCES grants(id),
+    grant_revision INTEGER NOT NULL, policy_revision INTEGER NOT NULL,
+    quote_form TEXT NOT NULL, conclusion TEXT NOT NULL,
+    created_at TEXT NOT NULL, actor TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS products (
     id TEXT NOT NULL, revision INTEGER NOT NULL, name TEXT NOT NULL,

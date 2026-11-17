@@ -31,7 +31,7 @@ class Delivery:
             source_id = asset["source_id"]
             if asset["state"] != "active" or not asset["source_active"]:
                 reasons.append({"source": source_id, "reason": "inactive"})
-            if not self.grants.permits(source_id, recipient, purpose, at):
+            if not self.grants.permits(source_id, recipient, purpose, at, form="raw"):
                 reasons.append({"source": source_id, "reason": "grant"})
             decision, policy_revision = self.policies.decision(asset["jurisdiction"], asset["classification"], purpose)
             revisions[source_id] = policy_revision

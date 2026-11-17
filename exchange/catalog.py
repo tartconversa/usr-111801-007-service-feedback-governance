@@ -39,6 +39,17 @@ class Catalog:
             write(self.connection, at, source["owner"], "asset.ingest", asset_id, {"source": source_id, "digest": digest})
         return digest
 
+    def withdraw(self, asset_id, at, actor, reason=""):
+        """受理删除请求：原件撤回后不再进入新的编排、交付与引用，历史记录保留。"""
+        row = self.connection.execute("SELECT state FROM assets WHERE id=?", (asset_id,)).fetchone()
+        if row is None:
+            raise KeyError(asset_id)
+        if row["state"] != "active":
+            raise ValueError("记录已不可用")
+        with self.connection:
+            self.connection.execute("UPDATE assets SET state='withdrawn' WHERE id=?", (asset_id,))
+            write(self.connection, at, actor, "asset.withdraw", asset_id, {"reason": reason})
+
     def get(self, asset_id):
         row = self.connection.execute("SELECT * FROM assets WHERE id=?", (asset_id,)).fetchone()
         if row is None:
